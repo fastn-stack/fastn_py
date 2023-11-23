@@ -23,3 +23,18 @@ class AESCipher:
     @staticmethod
     def unpad(s):
         return s[: -ord(s[len(s) - 1 :])]
+
+
+def get_first_name_and_last_name(name: str):
+    """
+    first name is the first word
+    last name is every word after the first word
+    """
+    parts = name.split(" ")
+    first_name = parts[0]
+    last_name = ""
+
+    if len(name) >= 2:
+        last_name = " ".join(name[1:])
+
+    return (first_name, last_name)

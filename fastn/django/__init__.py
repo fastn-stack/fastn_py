@@ -49,12 +49,9 @@ class GithubAuthMiddleware(MiddlewareMixin):
         if fastn_user is None:
             return
 
-        name = fastn_user.get("name", "").split(" ")
-        first_name = name[0]
-        last_name = ""
-
-        if len(name) >= 2:
-            last_name = name[1]
+        first_name, last_name = utils.get_first_name_and_last_name(
+            fastn_user.get("name", "")
+        )
 
         user, _ = User.objects.get_or_create(
             username=fastn_user.get("login"),
