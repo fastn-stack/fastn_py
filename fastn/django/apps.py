@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class FastnAuthMiddlewareConfig(AppConfig):
+class FastnConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "fastn"
+    name = "fastn.django"
