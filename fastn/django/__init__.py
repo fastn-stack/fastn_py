@@ -3,6 +3,7 @@ import os
 import json
 
 from django.contrib.auth.views import redirect_to_login
+from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.http import HttpRequest
@@ -12,7 +13,7 @@ from fastn.utils import AESCipher
 
 logger = logging.getLogger(__name__)
 
-SECRET_KEY = "FASTN_SECRET_KEY"
+SECRET_KEY = getattr(settings, "FASTN_SECRET_KEY", "FASTN_SECRET_KEY")
 COOKIE_NAME = "github"
 
 
@@ -37,7 +38,7 @@ class GithubAuthMiddleware(MiddlewareMixin):
 
         if key_str is None:
             logger.warning(
-                f"{SECRET_KEY} is required to use this middleware. Continuing anyway."
+                f"{SECRET_KEY} is required to use this middleware. Continuing with empty value. Remember to set {SECRET_KEY} in production!"
             )
             logger.warning(f"Use the same {SECRET_KEY} you used to configure fastn.")
 
