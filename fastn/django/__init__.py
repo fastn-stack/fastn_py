@@ -2,7 +2,6 @@ import logging
 import os
 import json
 
-from django.contrib.auth.views import redirect_to_login
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
@@ -26,7 +25,7 @@ class GithubAuthMiddleware(MiddlewareMixin):
         self.get_response = get_response
         # One-time configuration and initialization.
 
-    def _add_user_or_redirect(self, request: HttpRequest):
+    def _add_user(self, request: HttpRequest):
         github_cookie = request.COOKIES.get(COOKIE_NAME)
 
         if github_cookie is None:
@@ -44,15 +43,13 @@ class GithubAuthMiddleware(MiddlewareMixin):
 
         ci = AESCipher(key_str or "")
 
-        try:
-            # { username: String, name: String, access_token: String }
-            fastn_user = json.loads(ci.decrypt(github_cookie))
-        except json.decoder.JSONDecodeError:
-            # failed to decode json
-            return redirect_to_login(request.get_full_path())
+        # {'access_token': str, 'user': {'login': str, 'id': int, 'name': str | None, ' email': str | None}}
+        fastn_user = json.loads(ci.decrypt(github_cookie)).get("user")
 
-        username = fastn_user["username"]
-        name = fastn_user["name"].split(" ")
+        if fastn_user is None:
+            return
+
+        name = fastn_user.get("name", "").split(" ")
         first_name = name[0]
         last_name = ""
 
@@ -60,11 +57,10 @@ class GithubAuthMiddleware(MiddlewareMixin):
             last_name = name[1]
 
         user, _ = User.objects.get_or_create(
-            username=username,
+            username=fastn_user.get("login"),
             first_name=first_name,
             last_name=last_name,
-            email="",
-            password="",
+            email=fastn_user.get("email", ""),  # email has Not Null constraint
         )
 
         login(request, user)
@@ -76,4 +72,4 @@ class GithubAuthMiddleware(MiddlewareMixin):
         Otherwise, it will use __call__.
         https://github.com/django/django/blob/acde91745656a852a15db7611c08cabf93bb735b/django/utils/deprecation.py#L88-L148
         """
-        return self._add_user_or_redirect(request)
+        return self._add_user(request)
