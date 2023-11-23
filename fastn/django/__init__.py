@@ -3,7 +3,7 @@ import os
 import json
 
 from django.contrib.auth.views import redirect_to_login
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
@@ -29,7 +29,9 @@ class GithubAuthMiddleware(MiddlewareMixin):
         github_cookie = request.COOKIES.get(COOKIE_NAME)
 
         if github_cookie is None:
-            return redirect_to_login(request.get_full_path())
+            if request.user.is_authenticated:
+                logout(request)
+            return
 
         key_str = os.environ.get(SECRET_KEY)
 
