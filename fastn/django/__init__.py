@@ -1,5 +1,4 @@
 import logging
-import os
 import json
 
 from django.conf import settings
@@ -8,12 +7,15 @@ from django.contrib.auth.models import User
 from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
 
-from fastn.utils import AESCipher
+import fastn.utils as utils
 
 logger = logging.getLogger(__name__)
 
-SECRET_KEY = getattr(settings, "FASTN_SECRET_KEY", "FASTN_SECRET_KEY")
+SECRET_KEY = getattr(settings, "FASTN_SECRET_KEY", getattr(settings, "SECRET_KEY", ""))
+
 COOKIE_NAME = "github"
+
+CI = utils.AESCipher(SECRET_KEY)
 
 
 class GithubAuthMiddleware(MiddlewareMixin):
@@ -33,18 +35,15 @@ class GithubAuthMiddleware(MiddlewareMixin):
                 logout(request)
             return
 
-        key_str = os.environ.get(SECRET_KEY)
+        fastn_user = None
 
-        if key_str is None:
+        try:
+            # {'access_token': str, 'user': {'login': str, 'id': int, 'name': str | None, ' email': str | None}}
+            fastn_user = json.loads(CI.decrypt(github_cookie)).get("user")
+        except:
             logger.warning(
-                f"{SECRET_KEY} is required to use this middleware. Continuing with empty value. Remember to set {SECRET_KEY} in production!"
+                "Failed to decrypt user from cookie. Wrong SECRET_KEY provided"
             )
-            logger.warning(f"Use the same {SECRET_KEY} you used to configure fastn.")
-
-        ci = AESCipher(key_str or "")
-
-        # {'access_token': str, 'user': {'login': str, 'id': int, 'name': str | None, ' email': str | None}}
-        fastn_user = json.loads(ci.decrypt(github_cookie)).get("user")
 
         if fastn_user is None:
             return
