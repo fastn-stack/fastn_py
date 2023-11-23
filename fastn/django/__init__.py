@@ -8,14 +8,15 @@ from django.contrib.auth.models import User
 from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
 
-from .decrypt_cookie import AESCipher
+from fastn.utils import AESCipher
 
 logger = logging.getLogger(__name__)
 
 SECRET_KEY = "FASTN_SECRET_KEY"
 COOKIE_NAME = "github"
 
-class FastnAuthMiddleware(MiddlewareMixin):
+
+class GithubAuthMiddleware(MiddlewareMixin):
     """
     Add authenticated fastn user to django's authentication system
     """
@@ -33,7 +34,9 @@ class FastnAuthMiddleware(MiddlewareMixin):
         key_str = os.environ.get(SECRET_KEY)
 
         if key_str is None:
-            logger.warning(f"{SECRET_KEY} is required to use this middleware. Continuing anyway.")
+            logger.warning(
+                f"{SECRET_KEY} is required to use this middleware. Continuing anyway."
+            )
             logger.warning(f"Use the same {SECRET_KEY} you used to configure fastn.")
 
         ci = AESCipher(key_str or "")
@@ -53,10 +56,13 @@ class FastnAuthMiddleware(MiddlewareMixin):
         if len(name) >= 2:
             last_name = name[1]
 
-        user, _ = User.objects.get_or_create(username=username,
-                                             first_name=first_name,
-                                             last_name=last_name, email="",
-                                             password="",)
+        user, _ = User.objects.get_or_create(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            email="",
+            password="",
+        )
 
         login(request, user)
 
@@ -68,4 +74,3 @@ class FastnAuthMiddleware(MiddlewareMixin):
         https://github.com/django/django/blob/acde91745656a852a15db7611c08cabf93bb735b/django/utils/deprecation.py#L88-L148
         """
         return self._add_user_or_redirect(request)
-
