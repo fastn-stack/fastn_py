@@ -31,8 +31,8 @@ class GithubAuthMiddleware(MiddlewareMixin):
         github_cookie = request.COOKIES.get(COOKIE_NAME)
 
         if github_cookie is None:
-            if request.user.is_authenticated:
-                logout(request)
+            # if request.user.is_authenticated:
+            #     logout(request)
             return
 
         fastn_user = None
