@@ -69,3 +69,14 @@ class GithubAuthMiddleware(MiddlewareMixin):
         https://github.com/django/django/blob/acde91745656a852a15db7611c08cabf93bb735b/django/utils/deprecation.py#L88-L148
         """
         return self._add_user(request)
+
+
+
+class DisableCSRFOnDebug(MiddlewareMixin):
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def process_request(self, request):
+        if settings.DEBUG:
+            setattr(request, '_dont_enforce_csrf_checks', True)
