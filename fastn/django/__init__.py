@@ -35,6 +35,7 @@ def redirect(location):
         "redirect": location,
     })
 
+
 class RequestType:
 
     def __init__(self):
@@ -62,7 +63,7 @@ class GithubAuthMiddleware(MiddlewareMixin):
         self.get_response = get_response
         # One-time configuration and initialization.
 
-    def _add_user(self, request: HttpRequest):
+    def _add_user(self, request: RequestType):
         github_cookie = request.COOKIES.get(COOKIE_NAME)
 
         if github_cookie is None:
