@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 SECRET_KEY = getattr(settings, "FASTN_SECRET_KEY", getattr(settings, "SECRET_KEY", ""))
 COOKIE_NAME = "github"
 CI = utils.AESCipher(SECRET_KEY)
+COOKIE_MAX_AGE = 365*24*60*60
 
 
 class Form(forms.Form):
@@ -60,7 +61,8 @@ class GithubAuthMiddleware(MiddlewareMixin):
     """
 
     def __init__(self, get_response):
-        self.get_response = get_response
+        super(GithubAuthMiddleware, self).__init__(get_response)
+        self.is_github_cookie_valid = True
         # One-time configuration and initialization.
 
     def _add_user(self, request: RequestType):
@@ -77,6 +79,7 @@ class GithubAuthMiddleware(MiddlewareMixin):
             # {'access_token': str, 'user': {'login': str, 'id': int, 'name': str | None, ' email': str | None}}
             fastn_user = json.loads(CI.decrypt(github_cookie)).get("user")
         except:
+            self.is_github_cookie_valid = False
             logger.warning(
                 "Failed to decrypt user from cookie. Wrong SECRET_KEY provided"
             )
@@ -92,7 +95,7 @@ class GithubAuthMiddleware(MiddlewareMixin):
             username=fastn_user.get("login"),
             first_name=first_name,
             last_name=last_name,
-            email=fastn_user.get("email", ""),  # email has Not Null constraint
+            email=fastn_user.get("email") or "",  # email has Not Null constraint
         )
 
         login(request, user)
@@ -105,6 +108,30 @@ class GithubAuthMiddleware(MiddlewareMixin):
         https://github.com/django/django/blob/acde91745656a852a15db7611c08cabf93bb735b/django/utils/deprecation.py#L88-L148
         """
         return self._add_user(request)
+
+    def process_response(self, request: RequestType, response: django.http.HttpResponse):
+        # If the github cookie is not present or is invalid then set the
+        # cookie with django user
+        # {'access_token': str, 'user': {'login': str, 'id': int, 'name': str | None, ' email': str | None}}
+        invalid_cookie = COOKIE_NAME not in request.COOKIES or self.is_github_cookie_valid
+        if request.user.is_authenticated and invalid_cookie:
+            cookie = {
+                'access_token': 'django_admin',
+                'user': {
+                    'login': request.user.username,
+                    'id': request.user.id,
+                    'name': request.user.get_full_name(),
+                    'email': request.user.email
+                }
+            }
+            json_cookie = json.dumps(cookie)
+            encrypted_cookie = CI.encrypt(json_cookie)
+
+            response.set_cookie(COOKIE_NAME, encrypted_cookie, max_age = COOKIE_MAX_AGE)
+            # response['Set-Cookie'] = f"{COOKIE_NAME}={encrypted_cookie}; Max-Age={COOKIE_MAX_AGE}"
+
+        return response
+
 
 
 class DisableCSRFOnDebug(MiddlewareMixin):
