@@ -94,9 +94,11 @@ class GithubAuthMiddleware(MiddlewareMixin):
 
         user, _ = User.objects.get_or_create(
             username=fastn_user.get("login"),
-            first_name=first_name,
-            last_name=last_name,
-            email=fastn_user.get("email") or "",  # email has Not Null constraint
+            defaults={
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "email": fastn_user.get("email") or "",  # email has Not Null constraint
+                }
         )
 
         login(request, user)
