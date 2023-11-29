@@ -30,6 +30,11 @@ class Form(forms.Form):
         )
 
 
+def redirect(location):
+    return django.http.JsonResponse({
+        "redirect": location,
+    })
+
 class RequestType:
 
     def __init__(self):
