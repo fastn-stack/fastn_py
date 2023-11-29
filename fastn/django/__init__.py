@@ -1,9 +1,10 @@
 import logging
+import typing
 import json
 
 from django import forms
 from django.conf import settings
-from django.contrib.auth import login, logout
+from django.contrib.auth import login
 from django.contrib.auth.models import User
 import django.http
 from django.utils.deprecation import MiddlewareMixin
@@ -124,11 +125,8 @@ class GithubAuthMiddleware(MiddlewareMixin):
                     'email': request.user.email
                 }
             }
-            json_cookie = json.dumps(cookie)
-            encrypted_cookie = CI.encrypt(json_cookie)
-
-            response.set_cookie(COOKIE_NAME, encrypted_cookie, max_age = COOKIE_MAX_AGE)
-            # response['Set-Cookie'] = f"{COOKIE_NAME}={encrypted_cookie}; Max-Age={COOKIE_MAX_AGE}"
+            encrypted = CI.encrypt(json.dumps(cookie))
+            response.set_cookie(COOKIE_NAME, encrypted, max_age=COOKIE_MAX_AGE)
 
         return response
 
