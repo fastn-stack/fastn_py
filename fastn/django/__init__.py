@@ -19,6 +19,16 @@ CI = utils.AESCipher(SECRET_KEY)
 COOKIE_MAX_AGE = 365*24*60*60
 
 
+def action(form_class):
+    def wrapper(request: RequestType):
+        form = form_class(request)
+        if not form.is_valid():
+            return form.fastn_error_response()
+
+        return form.save()
+    return wrapper
+
+
 class Form(forms.Form):
 
     def __init__(self, request):
