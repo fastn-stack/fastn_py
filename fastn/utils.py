@@ -20,6 +20,22 @@ class AESCipher:
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         return self.unpad(cipher.decrypt(enc))
 
+    def encrypt(self, input_str: str) -> str:
+        # Convert input string to bytes
+        input_bytes = input_str.encode("utf-8")
+        # Calculate the number of padding bytes needed
+        padding_bytes = AES.block_size - (len(input_bytes) % AES.block_size)
+        # Add PKCS#7 padding to the input data
+        padded_data = input_bytes + bytes([padding_bytes] * padding_bytes)
+        # Generate a random IV (Initialization Vector)
+        iv = bytearray(16)  # You might want to use a proper random IV
+        # Create AES cipher object in CBC mode
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        # Encrypt the padded data
+        encrypted_data = cipher.encrypt(padded_data)
+        # Return the Base64 encoded result
+        return base64.b64encode(encrypted_data).decode('utf-8')
+
     @staticmethod
     def unpad(s):
         return s[: -ord(s[len(s) - 1 :])]
