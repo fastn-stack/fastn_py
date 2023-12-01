@@ -34,7 +34,7 @@ def get_first_name_and_last_name(name: str):
     first_name = parts[0]
     last_name = ""
 
-    if len(name) >= 2:
-        last_name = " ".join(name[1:])
+    if len(parts) >= 2:
+        last_name = " ".join(parts[1:])
 
     return (first_name, last_name)
