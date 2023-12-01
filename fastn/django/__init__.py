@@ -11,12 +11,12 @@ from django.utils.deprecation import MiddlewareMixin
 
 import fastn.utils as utils
 
-
 logger = logging.getLogger(__name__)
-SECRET_KEY = getattr(settings, "FASTN_SECRET_KEY", getattr(settings, "SECRET_KEY", ""))
+SECRET_KEY = getattr(settings, "FASTN_SECRET_KEY",
+                     getattr(settings, "SECRET_KEY", ""))
 COOKIE_NAME = "github"
 CI = utils.AESCipher(SECRET_KEY)
-COOKIE_MAX_AGE = 365*24*60*60
+COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 
 
 def action(form_class):
@@ -26,6 +26,7 @@ def action(form_class):
             return form.fastn_error_response()
 
         return form.save()
+
     return wrapper
 
 
@@ -45,6 +46,12 @@ class Form(forms.Form):
 def redirect(location):
     return django.http.JsonResponse({
         "redirect": location,
+    })
+
+
+def reload():
+    return django.http.JsonResponse({
+        "reload": True,
     })
 
 
@@ -105,10 +112,11 @@ class GithubAuthMiddleware(MiddlewareMixin):
         user, _ = User.objects.get_or_create(
             username=fastn_user.get("login"),
             defaults={
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "email": fastn_user.get("email") or "",  # email has Not Null constraint
-                }
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": fastn_user.get("email") or "",
+                # email has Not Null constraint
+            }
         )
 
         login(request, user)
@@ -122,7 +130,8 @@ class GithubAuthMiddleware(MiddlewareMixin):
         """
         return self._add_user(request)
 
-    def process_response(self, request: RequestType, response: django.http.HttpResponse):
+    def process_response(self, request: RequestType,
+                         response: django.http.HttpResponse):
         # If the github cookie is not present or is invalid then set the
         # cookie with django user
         # {'access_token': str, 'user': {'login': str, 'id': int, 'name': str | None, ' email': str | None}}
@@ -141,7 +150,6 @@ class GithubAuthMiddleware(MiddlewareMixin):
             response.set_cookie(COOKIE_NAME, encrypted, max_age=COOKIE_MAX_AGE)
 
         return response
-
 
 
 class DisableCSRFOnDebug(MiddlewareMixin):
