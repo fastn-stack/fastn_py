@@ -34,7 +34,7 @@ class AESCipher:
         # Encrypt the padded data
         encrypted_data = cipher.encrypt(padded_data)
         # Return the Base64 encoded result
-        return base64.b64encode(encrypted_data).decode('utf-8')
+        return base64.b64encode(encrypted_data).decode("utf-8")
 
     @staticmethod
     def unpad(s):
