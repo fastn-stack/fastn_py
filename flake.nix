@@ -12,7 +12,16 @@
           buildInputs = with pkgs; [ 
               black # format python code
               python311
+              python311Packages.virtualenvwrapper
           ];
+
+          shellHook = ''
+            VENV=.venv
+            if test ! -d $VENV; then
+              virtualenv $VENV
+            fi
+            source ./$VENV/bin/activate
+          '';
       };
   };
 }
