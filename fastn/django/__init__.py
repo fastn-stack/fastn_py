@@ -18,8 +18,8 @@ COOKIE_NAME = "fastn_session"
 CI = utils.AESCipher(SECRET_KEY)
 COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 
-FASTN_AUTH_CALLBACK = getattr(
-    settings, "FASTN_AUTH_CALLBACK", "fastn.django.default_callback"
+FASTN_AUTH_CALLBACK = module_loading.import_string(
+    getattr(settings, "FASTN_AUTH_CALLBACK", "fastn.django.default_callback")
 )
 
 
@@ -110,7 +110,7 @@ class GithubAuthMiddleware(MiddlewareMixin):
         if fastn_user is None:
             return
 
-        module_loading.import_string(FASTN_AUTH_CALLBACK)(request, fastn_user)
+        FASTN_AUTH_CALLBACK(request, fastn_user)
 
     def process_request(self, request: RequestType):
         """
