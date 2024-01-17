@@ -4,8 +4,7 @@ import json
 
 from django import forms
 from django.conf import settings
-from django.contrib.auth import login
-from django.contrib.auth.models import User
+from django.contrib.auth import logout
 import django.http
 from django.utils.deprecation import MiddlewareMixin
 
@@ -16,7 +15,11 @@ logger = logging.getLogger(__name__)
 SECRET_KEY = getattr(settings, "FASTN_SECRET_KEY", getattr(settings, "SECRET_KEY", ""))
 COOKIE_NAME = "fastn_session"
 CI = utils.AESCipher(SECRET_KEY)
-COOKIE_MAX_AGE = 365*24*60*60
+COOKIE_MAX_AGE = 365 * 24 * 60 * 60
+
+FASTN_AUTH_CALLBACK = module_loading.import_string(
+    getattr(settings, "FASTN_AUTH_CALLBACK", "fastn.django.default_callback.callback")
+)
 
 
 def action(form_class):
@@ -151,4 +154,4 @@ class DisableCSRFOnDebug(MiddlewareMixin):
 
     def process_request(self, request: RequestType):
         if settings.DEBUG:
-            setattr(request, '_dont_enforce_csrf_checks', True)
+            setattr(request, "_dont_enforce_csrf_checks", True)
