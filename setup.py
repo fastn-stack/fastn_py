@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/fastn-stack/fastn_py",
     packages=setuptools.find_packages(exclude=['tests*']),
-    install_requires=["django>=4.0", "pycryptodome"],
+    install_requires=["django>=4.0", "pycryptodome>=3.19.1"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: BSD 3-Clause",
